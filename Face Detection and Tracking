@@ -1,0 +1,45 @@
+import cv2
+import time
+
+def draw_boundary(image, classifier, scaleFactor, minNeighbours, color, text):
+    gray_img=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    features=classifier.detectMultiScale(gray_img, scaleFactor, minNeighbours)
+    coords=[]
+    #Parameters
+    for (x, y, w, h) in features:
+        cv2.rectangle(image, (x,y), (x+w, y+h), color, 2)
+        cv2.putText(image, text, (x, y-4), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 1, cv2.LINE_AA)
+        coords=[x, y, w, h]
+
+    return coords, image
+
+def detect(image, faceCascade):
+    color = {"blue": (255,0,0), "red":(0,0,255), "green":(0,255,0)}
+    draw_boundary(image, faceCascade, 1.1, 10, color['blue'], "Face")
+    return image
+
+faceCascade=cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+
+cam = cv2.VideoCapture(0)
+
+while True:
+        success, image = cam.read()
+        image = detect(image, faceCascade)
+        cv2.imshow('Face Detector', image)
+
+
+        prev_time = 0  # Variable to store the previous frame's time
+
+        # Calculate FPS
+        current_time = time.time()
+        fps = 1 / (current_time - prev_time)
+        prev_time = current_time
+
+        # Display FPS
+        cv2.putText(image, f'FPS: {int(fps)}', (150,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+cam.release()
+cv2.destroyAllWindows()
